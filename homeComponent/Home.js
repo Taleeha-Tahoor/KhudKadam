@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 export default function HomeFunction(){
 
+    
     return(
         <View>
         <Header

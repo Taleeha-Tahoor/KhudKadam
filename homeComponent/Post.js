@@ -1,83 +1,123 @@
 import { Avatar, Button, Card, Icon } from "@rneui/base";
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Alert } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-export default function Post () {
+export default function Post() {
     const navigation = useNavigation();
-    
-    return(
-        <View>
-        <Card containerStyle={styles.card}>
-            <View style={styles.header}>
-                <Avatar rounded size='medium' 
-                source={{uri: 'https://img.freepik.com/free-photo/business-concept-portrait-confident-young-businesswoman-keeping-arms-crossed-looking-camera-w_1258-104422.jpg?t=st=1726547412~exp=1726551012~hmac=3a14448a46f6c25b95b304a30f906b4501d606b246a67d7aad9b5c7a15058074&w=900'}}/>
-                <Text style={styles.username}>Amna Ashraf</Text>
-            </View>
-            <Card.Divider/>
-           
-            <Text style={styles.caption}>Found a pothole near street#49</Text>
-            
-            <Card.Image 
-            source={{uri: 'https://c02.purpledshub.com/uploads/sites/41/2024/01/Pot-hole-in-middle-of-the-road.jpg?w=1029&webp=1'}}
-            style={styles.image}/>
-            
-            <View style={styles.footer}>
-                
-                <Button type="clear"
-                 icon={<Icon name="arrow-up" type="feather" size={30} color='grey'/>}
-                 /> 
-                
-                
-                <Button type="clear"
-                 icon={<Icon name="arrow-down" type="feather" size={30} color='grey'/>}
-                 /> 
+    const [issues, setIssues] = useState([]);
 
-                
-                <Button style={styles.contributor}
-                type='solid' title='Contribute Now' 
-                onPress={() => navigation.navigate('VolunteerPositions')}
-                /> 
-                
-            </View>
-        </Card>
+    const getIssues = async () => {
+        try {
+            const response = await axios.get('http://192.168.18.68:5001/issue/getIssues');
+            if (response.status === 200) {
+                setIssues(response.data.issues);
+                Alert.alert(response?.data?.message);
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Failed fetching issues', error.response?.data?.message || 'An error occurred');
+        }
+    };
+
+    useEffect(() => {
+        getIssues();
+    }, []);
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.heading}>All Issues</Text>
+            <FlatList
+                data={issues}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                    <Card containerStyle={styles.card}>
+                        <View style={styles.header}>
+                            <Avatar
+                                rounded
+                                size="medium"
+                                source={{ uri: item.userAvatar }} // Ensure this URL is valid
+                            />
+                            <Text style={styles.username}>Saima Bibi</Text>
+                        </View>
+                        <Card.Divider />
+                        <Text style={styles.caption}>{item.title}</Text>
+                        <Card.Image
+                            source={{ uri: item.image }} // Ensure this URL is valid
+                            style={styles.image}
+                        />
+                        <View style={styles.footer}>
+                            <Button
+                                type="clear"
+                                icon={<Icon name="arrow-up" type="feather" size={30} color="grey" />}
+                            />
+                            <Button
+                                type="clear"
+                                icon={<Icon name="arrow-down" type="feather" size={30} color="grey" />}
+                            />
+                            <Button
+                                style={styles.contributor}
+                                type="solid"
+                                title="Contribute Now"
+                                onPress={() => navigation.navigate('VolunteerPositions')}
+                            />
+                        </View>
+                    </Card>
+                )}
+                ListEmptyComponent={<Text style={styles.noIssuesText}>No issues found</Text>}
+                contentContainerStyle={{ paddingBottom: 100 }} // Adjust bottom padding for the last item
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    card:{
-    borderRadius: 10,
-    padding: 15,
-    margin: 10,
+    container: {
+        padding: 16,
+        paddingBottom: 200,
     },
-    header:{
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    noIssuesText: {
+        fontSize: 18,
+        color: 'grey',
+        textAlign: 'center',
+    },
+    card: {
+        marginBottom: 10,
+        padding: 10,
+    },
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 7
+        marginBottom: 10,
     },
-    username:{
+    username: {
         marginLeft: 10,
         fontSize: 16,
-        fontWeight: "bold"
+        fontWeight: 'bold',
     },
     caption: {
-        fontSize: 20,
-        margin: 5,
-        marginBottom: 17,
+        fontSize: 16,
+        marginBottom: 10,
     },
     image: {
         width: '100%',
-        height: 200
-
+        height: 200,
+        borderRadius: 10,
     },
     footer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        marginTop: 10,
     },
     contributor: {
-       justifyContent: 'flex-end',
-        color: 'white'
-    }
-
+        backgroundColor: '#007bff',
+        padding: 10,
+    },
 });

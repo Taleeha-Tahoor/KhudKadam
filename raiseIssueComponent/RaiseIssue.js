@@ -1,21 +1,64 @@
-import React from 'react';
-import { View, TextInput, Image, Button, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Alert, Button, StyleSheet } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
+import axios from 'axios';
 
 export default function IssueForm() {
   const navigation = useNavigation();
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: '',
+    location: '',
+    image: '',
+  });
+
+  const handleInputChange = (name, value) => {
+    setFormData(prevState => ({
+        ...prevState,
+        [name]: value
+    }));
+};
+
+const handleIssue = async () => {
+  try {
+      const response = await axios.post('http://192.168.18.68:5001/issue/raiseIssue',
+          formData,
+          { headers: { 'Content-Type': 'application/json' } });
+      if (response.status === 200) {
+          Alert.alert(response?.data?.message);
+          navigation.navigate('Home');
+      }
+  } catch (error) {
+      console.error(error);
+      Alert.alert('Failed to raise issue', error.response?.data?.message || 'An error occurred');
+  }
+};
 
   return (
+
     <View style={styles.container}>
-      <TextInput placeholder="Title" style={styles.textInput} />
-      <TextInput placeholder="Description" style={styles.textInput} />
-      <TextInput placeholder="Category" style={styles.textInput} />
-      <TextInput placeholder="Location" style={styles.textInput} />
-      <Image
+      <TextInput onChangeText={text => handleInputChange('title', text)} 
+       value={formData.title} placeholder="Title" style={styles.textInput} />
+
+      <TextInput onChangeText={text => handleInputChange('description', text)}
+       value={formData.description} placeholder="Description" style={styles.textInput} />
+
+      <TextInput onChangeText={text => handleInputChange('category', text)}
+       value={formData.category} placeholder="Category" style={styles.textInput} />
+
+      <TextInput onChangeText={text => handleInputChange('location', text)}
+       value={formData.location} placeholder="Location" style={styles.textInput} />
+
+      <TextInput onChangeText={text => handleInputChange('image', text)}
+       value={formData.image} placeholder="Image" style={styles.textInput} />
+      
+      {/* <Image onChangeText={text => handleInputChange('image', text)}  
+        value={formData.image}
         source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZjvFIN_2wzrCl9V4flNp6uA9_vuF1gDc6W7pBptS23qWCQMYrV12jt1iH6tsJ6KIuC4k&usqp=CAU' }}
         style={styles.image}
-      />
-      <Button title="Submit" onPress={() => navigation.navigate('Home')} style={styles.submitButton} />
+      /> */}
+      <Button title="Submit" onPress={handleIssue} style={styles.submitButton} />
     </View>
   );
 }
